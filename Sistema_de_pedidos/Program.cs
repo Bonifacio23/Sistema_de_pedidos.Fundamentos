@@ -347,30 +347,30 @@ namespace Sistema_de_pedidos
 
             double costoDelivery = 0;
 
-            if (delivery[0])
+            if (delivery[i])
             {
-                if (distrito[0] == "San Martín de Porres")
+                if (distrito[i] == "San Martín de Porres")
                     costoDelivery = 3;
-                else if (distrito[0] == "Los Olivos")
+                else if (distrito[i] == "Los Olivos")
                     costoDelivery = 4;
-                else if (distrito[0] == "Independencia")
+                else if (distrito[i] == "Independencia")
                     costoDelivery = 4;
-                else if (distrito[0] == "Rímac")
+                else if (distrito[i] == "Rímac")
                     costoDelivery = 5;
-                else if (distrito[0] == "Comas")
+                else if (distrito[i] == "Comas")
                     costoDelivery = 6;
-                else if (distrito[0] == "Cercado de Lima")
+                else if (distrito[i] == "Cercado de Lima")
                     costoDelivery = 6;
-                else if (distrito[0] == "Carmen de la Legua-Reynoso")
+                else if (distrito[i] == "Carmen de la Legua-Reynoso")
                     costoDelivery = 7;
-                else if (distrito[0] == "Callao")
+                else if (distrito[i] == "Callao")
                     costoDelivery = 7;
-                else if (distrito[0] == "Puente Piedra")
+                else if (distrito[i] == "Puente Piedra")
                     costoDelivery = 8;
-                else if (distrito[0] == "Ventanilla")
+                else if (distrito[i] == "Ventanilla")
                     costoDelivery = 10;
 
-                Console.WriteLine("Distrito: " + distrito[0]);
+                Console.WriteLine("Distrito: " + distrito[i]);
                 Console.WriteLine("Costo de delivery: S/ " + costoDelivery);
             }
             else
