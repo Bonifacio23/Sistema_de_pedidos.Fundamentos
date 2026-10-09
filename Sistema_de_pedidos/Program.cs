@@ -199,8 +199,14 @@ namespace Sistema_de_pedidos
                             contadorPedidos++;
                             break;
                         case 16:
-                            Console.WriteLine("Saliendo del menú de pedidos.");
-                            break;
+                            if (contadorPedidos == 0){
+                                Console.WriteLine("No ha seleccionado ningun pedido");
+                                continue;
+                            }
+                            else {
+                                Console.WriteLine("Saliendo del menú de pedidos.");
+                                break;
+                            }
 
                         default:
                             Console.WriteLine("Opción de plato inválida.");
