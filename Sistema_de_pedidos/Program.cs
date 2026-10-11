@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Sistema_de_pedidos
 {
@@ -95,51 +96,78 @@ namespace Sistema_de_pedidos
 
                 if (tipo == "d")
                 {
-                    Console.WriteLine("Ingrese la dirección:");
-                    Direccion[contador] = Console.ReadLine();
 
-                    Console.WriteLine("Ingrese el teléfono:");
-                    Telefono[contador] = Console.ReadLine();
+                    string patronDireccion = @"\A[A-Za-zÁÉÍÓÚáéíóúÑñ0-9][A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s.,#-]*\z";
 
-                    Console.WriteLine("Seleccione el distrito:");
+                    bool direccionValida = false;
 
-                    for (int i = 0; i < distritos.Count; i++)
+                    while (!direccionValida)
                     {
-                        Console.WriteLine($"{i + 1}. {distritos[i]}");
+                        Console.WriteLine("Ingrese la dirección:");
+                        Direccion[contador] = Console.ReadLine() ?? "";
+
+                        if (Regex.IsMatch(Direccion[contador], patronDireccion))
+                        {
+                            direccionValida = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("La dirección no es válida. Intente nuevamente.");
+                        }
                     }
 
-                    int opcionDistrito = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Dirección registrada correctamente.");
 
-                    switch (opcionDistrito)
+
+                    string patronTelefono = @"\A[0-9]{9}\z";
+                    bool telefonoValido = false;
+
+                    while (!telefonoValido)
                     {
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
-                        case 8:
-                        case 9:
-                        case 10:
+                        Console.WriteLine("Ingrese el teléfono:");
+                        Telefono[contador] = Console.ReadLine() ?? "";
+
+                        if (Regex.IsMatch(Telefono[contador], patronTelefono))
+                        {
+                            telefonoValido = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("El teléfono no es válido. Debe contener exactamente 9 dígitos.");
+                        }
+                    }
+
+
+                    bool distritoValido = false;
+
+                    while (!distritoValido)
+                    {
+                        Console.WriteLine("\nSeleccione el distrito:");
+
+                        for (int i = 0; i < distritos.Count; i++)
+                        {
+                            Console.WriteLine($"{i + 1}. {distritos[i]}");
+                        }
+
+                        Console.Write("Ingrese el número del distrito: ");
+                        string entrada = Console.ReadLine() ?? "";
+
+                        if (int.TryParse(entrada, out int opcionDistrito) &&
+                            opcionDistrito >= 1 &&
+                            opcionDistrito <= distritos.Count)
+                        {
                             distrito[contador] = distritos[opcionDistrito - 1];
-                            break;
+                            distritoValido = true;
+                            delivery[contador] = true;
 
-                        default:
-                            Console.WriteLine("Distrito no válido.");
-                            break;
+                            Console.WriteLine("Distrito válido: " + distrito[contador]);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Opción inválida. Seleccione un distrito de la lista.");
+                        }
                     }
 
-                    if (distritos.Contains(distrito[contador]))
-                    {
-                        Console.WriteLine("Distrito válido.");
-                        delivery[contador] = true;
-                    }
-                    else
-                    {
-                        Console.WriteLine("No se realiza delivery a este distrito.");
-                        return;
-                    }
                 }
                 else if (tipo == "s")
                 {
@@ -278,7 +306,14 @@ namespace Sistema_de_pedidos
                 {
                     if (!string.IsNullOrEmpty(pedido[i]))
                     {
-                        Console.WriteLine($"Pedido de {nombreCliente}: {pedido[i]}");
+                        Console.WriteLine($"Pedido de {nombreCliente}: ");
+                        for (int j = 0; j < contadorPedidos; j++)
+                        {
+                            if (pedido[j] != null)
+                            {
+                                Console.WriteLine($"- {pedido[j]}");
+                            }
+                        }
                         if (delivery[i])
                         {
                             Console.WriteLine($"Dirección de entrega: {Direccion[i]}, Teléfono: {Telefono[i]}");
@@ -347,8 +382,16 @@ namespace Sistema_de_pedidos
 
             double costoDelivery = 0;
 
-            if (delivery[i])
-            {
+            for (int i = 0; i < contadorPedidos; i++)
+            { 
+                if (delivery[i])
+                {
+                    Console.WriteLine("Pedido por delivery.");
+                }
+                else
+                {
+                    Console.WriteLine("Pedido para salón.");
+                }
                 if (distrito[i] == "San Martín de Porres")
                     costoDelivery = 3;
                 else if (distrito[i] == "Los Olivos")
@@ -372,10 +415,6 @@ namespace Sistema_de_pedidos
 
                 Console.WriteLine("Distrito: " + distrito[i]);
                 Console.WriteLine("Costo de delivery: S/ " + costoDelivery);
-            }
-            else
-            {
-                Console.WriteLine("Pedido para salón.");
             }
 
             double total = totalPedidos + costoDelivery;
