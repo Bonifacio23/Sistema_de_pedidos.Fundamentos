@@ -69,7 +69,7 @@ namespace Sistema_de_pedidos
             }
         
 
-        static public void Menu()
+        static public void Menu_de_opciones()
         {
             Console.WriteLine("------------------------------------------");
             Console.WriteLine("*************Menú de opciones*************");
@@ -180,114 +180,10 @@ namespace Sistema_de_pedidos
                     return;
                 }
 
-                int opcion = 0;
-                while (opcion != 16)
-                {
-                    int con = 0;
-                    Console.WriteLine("\nSeleccione el pedido:");
-                    Console.WriteLine("1. Arroz chaufa              S/ 15");
-                    Console.WriteLine("2. Tallarín saltado          S/ 16");
-                    Console.WriteLine("3. Pollo con verduras        S/ 18");
-                    Console.WriteLine("4. Pollo Chi Jau Kay         S/ 20");
-                    Console.WriteLine("5. Pollo Tipakay             S/ 20");
-                    Console.WriteLine("6. Aeropuerto                S/ 17");
-                    Console.WriteLine("7. Lomo saltado              S/ 22");
-                    Console.WriteLine("8. Kam Lu Wantán             S/ 20");
-                    Console.WriteLine("9. Wantán frito              S/ 8");
-                    Console.WriteLine("10. Sopa wantán              S/ 10");
-                    Console.WriteLine("11. Rollito primavera        S/ 7");
-                    Console.WriteLine("12. Inca Kola                S/ 4");
-                    Console.WriteLine("13. Coca-Cola                S/ 4");
-                    Console.WriteLine("14. Chicha morada            S/ 5");
-                    Console.WriteLine("15. Limonada                 S/ 5");
-                    Console.WriteLine("16. Salir del menú de pedidos");
-                    Console.WriteLine("Ingrese el número del plato que desea pedir:");
+                Menu();
+                double total = CalcularTotal();
+                Metodo_pago();
 
-                    opcion = int.Parse(Console.ReadLine());
-
-                    switch (opcion)
-                    {
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
-                        case 8:
-                        case 9:
-                        case 10:
-                        case 11:
-                        case 12:
-                        case 13:
-                        case 14:
-                        case 15:
-                            pedido[contadorPedidos] = platos[opcion - 1];
-                            Console.WriteLine("Plato seleccionado: " + pedido[contadorPedidos]);
-                            contadorPedidos++;
-                            break;
-                        case 16:
-                            if (contadorPedidos == 0){
-                                Console.WriteLine("No ha seleccionado ningun pedido");
-                                continue;
-                            }
-                            else {
-                                Console.WriteLine("Saliendo del menú de pedidos.");
-                                break;
-                            }
-
-                        default:
-                            Console.WriteLine("Opción de plato inválida.");
-                            continue;
-                    }
-                }
-
-                    if (!platos.Contains(pedido[contador]))
-                    {
-                        Console.WriteLine("Plato no disponible en el menú.");
-                        return;
-                    }
-                    double total = CalcularTotal();
-
-                    Console.WriteLine("Seleccione el método de pago:");
-                    Console.WriteLine("1. Yape");
-                    Console.WriteLine("2. Plin");
-                    Console.WriteLine("3. Tarjeta");
-                    Console.WriteLine("4. Efectivo");
-
-
-                    int pago = int.Parse(Console.ReadLine());
-
-                    switch (pago)
-                    {
-                        case 1:
-                            Console.WriteLine("Pago con Yape.");
-                            metodoPago[contador] = "Yape";
-                            break;
-
-                        case 2:
-                            Console.WriteLine("Pago con Plin.");
-                            metodoPago[contador] = "Plin";
-                            break;
-
-                        case 3:
-                            Console.WriteLine("Pago con tarjeta.");
-                            metodoPago[contador] = "Tarjeta";
-                            break;
-
-                        case 4:
-                            Console.WriteLine("Pago en efectivo.");
-                            metodoPago[contador] = "Efectivo";
-                            break;
-
-                        default:
-                            Console.WriteLine("Método de pago inválido.");
-                            return;
-                    }
-
-                    Console.WriteLine("Pedido registrado exitosamente.");
-
-                    contador++;
                 }
             
             else
@@ -295,7 +191,120 @@ namespace Sistema_de_pedidos
                 Console.WriteLine("Se alcanzó el límite máximo de pedidos.");
             }
         }
+        static public void Metodo_pago() 
+        {
+            Console.WriteLine("Seleccione el método de pago:");
+            Console.WriteLine("1. Yape");
+            Console.WriteLine("2. Plin");
+            Console.WriteLine("3. Tarjeta");
+            Console.WriteLine("4. Efectivo");
 
+
+            int pago = int.Parse(Console.ReadLine());
+
+            switch (pago)
+            {
+                case 1:
+                    Console.WriteLine("Pago con Yape.");
+                    metodoPago[contador] = "Yape";
+                    break;
+
+                case 2:
+                    Console.WriteLine("Pago con Plin.");
+                    metodoPago[contador] = "Plin";
+                    break;
+
+                case 3:
+                    Console.WriteLine("Pago con tarjeta.");
+                    metodoPago[contador] = "Tarjeta";
+                    break;
+
+                case 4:
+                    Console.WriteLine("Pago en efectivo.");
+                    metodoPago[contador] = "Efectivo";
+                    break;
+
+                default:
+                    Console.WriteLine("Método de pago inválido.");
+                    return;
+            }
+
+            Console.WriteLine("Pedido registrado exitosamente.");
+
+            contador++;
+
+        }
+        static public void Menu() 
+        {
+            int opcion = 0;
+            while (opcion != 16)
+            {
+                Console.WriteLine("\nSeleccione el pedido:");
+                Console.WriteLine("1. Arroz chaufa              S/ 15");
+                Console.WriteLine("2. Tallarín saltado          S/ 16");
+                Console.WriteLine("3. Pollo con verduras        S/ 18");
+                Console.WriteLine("4. Pollo Chi Jau Kay         S/ 20");
+                Console.WriteLine("5. Pollo Tipakay             S/ 20");
+                Console.WriteLine("6. Aeropuerto                S/ 17");
+                Console.WriteLine("7. Lomo saltado              S/ 22");
+                Console.WriteLine("8. Kam Lu Wantán             S/ 20");
+                Console.WriteLine("9. Wantán frito              S/ 8");
+                Console.WriteLine("10. Sopa wantán              S/ 10");
+                Console.WriteLine("11. Rollito primavera        S/ 7");
+                Console.WriteLine("12. Inca Kola                S/ 4");
+                Console.WriteLine("13. Coca-Cola                S/ 4");
+                Console.WriteLine("14. Chicha morada            S/ 5");
+                Console.WriteLine("15. Limonada                 S/ 5");
+                Console.WriteLine("16. Salir del menú de pedidos");
+                Console.WriteLine("Ingrese el número del plato que desea pedir:");
+
+                opcion = int.Parse(Console.ReadLine());
+
+                switch (opcion)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                    case 13:
+                    case 14:
+                    case 15:
+                        pedido[contadorPedidos] = platos[opcion - 1];
+                        Console.WriteLine("Plato seleccionado: " + pedido[contadorPedidos]);
+                        contadorPedidos++;
+                        break;
+                    case 16:
+                        if (contadorPedidos == 0)
+                        {
+                            Console.WriteLine("No ha seleccionado ningun pedido");
+                            continue;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Saliendo del menú de pedidos.");
+                            break;
+                        }
+
+                    default:
+                        Console.WriteLine("Opción de plato inválida.");
+                        continue;
+                }
+            }
+
+            if (!platos.Contains(pedido[contador]))
+            {
+                Console.WriteLine("Plato no disponible en el menú.");
+                return;
+            }
+        }
         static public void ValidarDatosPedido()
         {
             Console.WriteLine("Ingrese el nombre del cliente para validar su pedido:");
