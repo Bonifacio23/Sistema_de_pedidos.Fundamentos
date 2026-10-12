@@ -155,11 +155,13 @@ Sistema_de_pedidos.Fundamentos/
 - [ ] Actualización del estado del pedido
 - [ ] Cálculo del total por pedido individual
 
-## 👨‍💻 Grupo 1
+## 👥 Autores
 
-**Jhonny Dylan Perez Poma (N00560734)**
-**Félix Jesús Bonifacio Cotrina (N00559691)**
-**Joaquin Alejandro Cabrejos Cabezas (N00542549)**
-**Jared Valentino Readi Flores (N00535298)**
+Estudiantes de Ingeniería de Sistemas de la Universidad Privada del Norte, Lima, Perú.
+
+Jhonny Dylan Perez Poma (N00560734)
+Félix Jesús Bonifacio Cotrina (N00559691)
+Joaquin Alejandro Cabrejos Cabezas (N00542549)
+Jared Valentino Readi Flores (N00535298)
 
 [![GitHub](https://img.shields.io/badge/GitHub-Bonifacio23-181717?style=flat&logo=github)](https://github.com/Bonifacio23)
