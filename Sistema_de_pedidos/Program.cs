@@ -1,25 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Sistema_de_pedidos
 {
     internal class Program
     {
-        
-        static int max = 5;
-        static bool[] delivery = new bool[max];
-        static string[] Nombre = new string[max];
-        static string[] Direccion = new string[max];
-        static string[] Telefono = new string[max];
-        static string[] pedido = new string[max];
-        static string[] metodoPago = new string[max];
+
+        static int maxItems = 50;
+        static string[,] pedido = new string[maxItems, maxItems];
+        static int[] cantidadPedidos = new int[maxItems];
+        static bool[] delivery = new bool[maxItems];
+        static string[] Nombre = new string[maxItems];
+        static string[] Direccion = new string[maxItems];
+        static string[] Telefono = new string[maxItems];
+
+        static string[] boleta = new string[maxItems];
+        static double[] totalCliente = new double[maxItems];
+        static double totalVendido = 0;
+        static string rutaHistorial = "historial.txt";
+        static string[] metodoPago = new string[maxItems];
         static int contador = 0;
-        static int contadorPedidos = 0;
-        static string[] distrito = new string[max];
+        static string[] estado = new string[maxItems];
+        static string[] distrito = new string[maxItems];
 
         static public List<string> platos = new List<string>
 {
@@ -54,42 +61,31 @@ namespace Sistema_de_pedidos
 };
 
         static public void Title()
-            {
-                string titulo = "Sistema De Registro de Pedidos";
-                int posicion = (Console.WindowWidth - titulo.Length) / 2;
-
-                Console.SetCursorPosition(posicion, Console.CursorTop);
-                Console.WriteLine("------------------------------");
-
-                Console.SetCursorPosition(posicion, Console.CursorTop);
-                Console.WriteLine(titulo);
-
-                Console.SetCursorPosition(posicion, Console.CursorTop);
-                Console.WriteLine("------------------------------");
-            }
-        
-
-        static public void Menu_de_opciones()
         {
-            Console.WriteLine("------------------------------------------");
-            Console.WriteLine("*************Menú de opciones*************");
-            Console.WriteLine("------------------------------------------");
-            Console.WriteLine("1. Registrar cliente");
-            Console.WriteLine("2. Registrar pedido");
-            Console.WriteLine("3. Validar datos del pedido");
-            Console.WriteLine("4. Buscar plato por nombre");
-            Console.WriteLine("5. Validar pago del pedido");
-            Console.WriteLine("6. Actualizar estado del pedido");
-            Console.WriteLine("7. Calcular total del pedido");
-            Console.WriteLine("8. Salir");
+            string titulo = "Sistema De Registro de Pedidos";
+            int posicion = (Console.WindowWidth - titulo.Length) / 2;
+
+            Console.SetCursorPosition(posicion, Console.CursorTop);
+            Console.WriteLine("------------------------------");
+
+            Console.SetCursorPosition(posicion, Console.CursorTop);
+            Console.WriteLine(titulo);
+
+            Console.SetCursorPosition(posicion, Console.CursorTop);
+            Console.WriteLine("------------------------------");
         }
+
+
         static public void RegistrarPedido()
         {
 
-            if (contador < max)
+            if (contador < maxItems)
             {
+
+                cantidadPedidos[contador] = 0;
                 Console.WriteLine("Ingrese el nombre del cliente:");
-                Nombre[contador] = Console.ReadLine();
+                Nombre[contador] = Console.ReadLine()?.Trim();
+
 
                 Console.WriteLine("¿El pedido será por delivery o para salón? (d/s):");
                 string tipo = Console.ReadLine().ToLower();
@@ -104,7 +100,7 @@ namespace Sistema_de_pedidos
                     while (!direccionValida)
                     {
                         Console.WriteLine("Ingrese la dirección:");
-                        Direccion[contador] = Console.ReadLine() ?? "";
+                        Direccion[contador] = Console.ReadLine() ?? "".Trim();
 
                         if (Regex.IsMatch(Direccion[contador], patronDireccion))
                         {
@@ -125,7 +121,7 @@ namespace Sistema_de_pedidos
                     while (!telefonoValido)
                     {
                         Console.WriteLine("Ingrese el teléfono:");
-                        Telefono[contador] = Console.ReadLine() ?? "";
+                        Telefono[contador] = Console.ReadLine() ?? "".Trim();
 
                         if (Regex.IsMatch(Telefono[contador], patronTelefono))
                         {
@@ -136,6 +132,7 @@ namespace Sistema_de_pedidos
                             Console.WriteLine("El teléfono no es válido. Debe contener exactamente 9 dígitos.");
                         }
                     }
+                    Console.WriteLine("Teléfono registrado correctamente."); 
 
 
                     bool distritoValido = false;
@@ -149,8 +146,9 @@ namespace Sistema_de_pedidos
                             Console.WriteLine($"{i + 1}. {distritos[i]}");
                         }
 
+
                         Console.Write("Ingrese el número del distrito: ");
-                        string entrada = Console.ReadLine() ?? "";
+                        string entrada = Console.ReadLine() ?? "".Trim();
 
                         if (int.TryParse(entrada, out int opcionDistrito) &&
                             opcionDistrito >= 1 &&
@@ -180,15 +178,64 @@ namespace Sistema_de_pedidos
                     return;
                 }
 
-                Menu();
-                double total = CalcularTotal();
+                Menu(contador);
+                double total = CalcularTotal(contador);
                 Metodo_pago();
 
-                }
+            }
             
             else
             {
                 Console.WriteLine("Se alcanzó el límite máximo de pedidos.");
+            }
+        }
+    
+        static double ObtenerCostoDelivery(string d)
+        {
+            switch (d)
+            {
+                case "San Martín de Porres":
+                    return 3;
+                case "Los Olivos":
+                case "Independencia":
+                    return 4;
+                case "Rímac":
+                    return 5;
+                case "Comas":
+                case "Cercado de Lima":
+                    return 6;
+                case "Carmen de la Legua-Reynoso":
+                case "Callao":
+                    return 7;
+                case "Puente Piedra":
+                    return 8;
+                case "Ventanilla":
+                    return 10;
+                default:
+                    Console.WriteLine("Distrito no válido.");
+                    return 0;
+            }
+        }
+        static double ObtenerPrecio(string plato)
+        {
+            switch (plato)
+            {
+                case "Arroz chaufa": return 15;
+                case "Tallarín saltado": return 16;
+                case "Pollo con verduras": return 18;
+                case "Pollo Chi Jau Kay": return 20;
+                case "Pollo Tipakay": return 20;
+                case "Aeropuerto": return 17;
+                case "Lomo saltado": return 22;
+                case "Kam Lu Wantán": return 20;
+                case "Wantán frito": return 8;
+                case "Sopa wantán": return 10;
+                case "Rollito primavera": return 7;
+                case "Inca Kola": return 4;
+                case "Coca-Cola": return 4;
+                case "Chicha morada": return 5;
+                case "Limonada": return 5;
+                default: return 0;
             }
         }
         static public void Metodo_pago() 
@@ -231,14 +278,17 @@ namespace Sistema_de_pedidos
 
             Console.WriteLine("Pedido registrado exitosamente.");
 
+            
+            estado[contador] = "Pendiente";
             contador++;
 
         }
-        static public void Menu() 
+        static public void Menu(int cliente)
         {
             int opcion = 0;
             while (opcion != 16)
             {
+                Console.Clear();
                 Console.WriteLine("\nSeleccione el pedido:");
                 Console.WriteLine("1. Arroz chaufa              S/ 15");
                 Console.WriteLine("2. Tallarín saltado          S/ 16");
@@ -260,71 +310,55 @@ namespace Sistema_de_pedidos
 
                 opcion = int.Parse(Console.ReadLine());
 
-                switch (opcion)
+                if (opcion >= 1 && opcion <= 15)
                 {
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                    case 9:
-                    case 10:
-                    case 11:
-                    case 12:
-                    case 13:
-                    case 14:
-                    case 15:
-                        pedido[contadorPedidos] = platos[opcion - 1];
-                        Console.WriteLine("Plato seleccionado: " + pedido[contadorPedidos]);
-                        contadorPedidos++;
-                        break;
-                    case 16:
-                        if (contadorPedidos == 0)
-                        {
-                            Console.WriteLine("No ha seleccionado ningun pedido");
-                            continue;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Saliendo del menú de pedidos.");
-                            break;
-                        }
-
-                    default:
-                        Console.WriteLine("Opción de plato inválida.");
+                    if (cantidadPedidos[cliente] >= maxItems)
+                    {
+                        Console.WriteLine("Se alcanzó el límite de platos por cliente.");
                         continue;
+                    }
+                    pedido[cliente, cantidadPedidos[cliente]] = platos[opcion - 1];
+                    Console.WriteLine("Plato seleccionado: " + platos[opcion - 1]);
+                    cantidadPedidos[cliente]++;
+                }
+                else if (opcion == 16)
+                {
+                    if (cantidadPedidos[cliente] == 0)
+                    {
+                        Console.WriteLine("No ha seleccionado ningun pedido");
+                        opcion = 0;
+                        continue;
+                    }
+                    Console.WriteLine("Saliendo del menú de pedidos.");
+                }
+                else
+                {
+                    Console.WriteLine("Opción de plato inválida.");
                 }
             }
-
-            if (!platos.Contains(pedido[contador]))
-            {
-                Console.WriteLine("Plato no disponible en el menú.");
-                return;
-            }
         }
+
         static public void ValidarDatosPedido()
         {
             Console.WriteLine("Ingrese el nombre del cliente para validar su pedido:");
-            string nombreCliente = Console.ReadLine();
+            string nombreCliente = (Console.ReadLine() ?? "").Trim();
+
             for (int i = 0; i < contador; i++)
             {
-                if (Nombre[i] == nombreCliente)
+                if (string.Equals(Nombre[i], nombreCliente, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!string.IsNullOrEmpty(pedido[i]))
+                    if (cantidadPedidos[i] > 0)
                     {
-                        Console.WriteLine($"Pedido de {nombreCliente}: ");
-                        for (int j = 0; j < contadorPedidos; j++)
+                        Console.WriteLine($"Pedido de {Nombre[i]}:");
+                        for (int j = 0; j < cantidadPedidos[i]; j++)
                         {
-                            if (pedido[j] != null)
-                            {
-                                Console.WriteLine($"- {pedido[j]}");
-                            }
+                            Console.WriteLine($"- {pedido[i, j]}");
                         }
+
                         if (delivery[i])
                         {
+                            Console.WriteLine($"Distrito: {distrito[i]}");
+                            Console.WriteLine($"Costo de delivery: S/ {ObtenerCostoDelivery(distrito[i])}");
                             Console.WriteLine($"Dirección de entrega: {Direccion[i]}, Teléfono: {Telefono[i]}");
                         }
                         else
@@ -341,109 +375,154 @@ namespace Sistema_de_pedidos
             }
             Console.WriteLine("Cliente no encontrado.");
         }
-        static public double CalcularTotal()
+        static public double CalcularTotal(int cliente)
         {
+            StringBuilder sb = new StringBuilder();
             double totalPedidos = 0;
 
-            Console.WriteLine("------------------------------");
-            Console.WriteLine("       BOLETA DE PAGO");
-            Console.WriteLine("------------------------------");
+            sb.AppendLine("------------------------------");
+            sb.AppendLine("       BOLETA DE PAGO");
+            sb.AppendLine("------------------------------");
 
-            for (int i = 0; i < contadorPedidos; i++)
+            for (int i = 0; i < cantidadPedidos[cliente]; i++)
             {
-                double precio = 0;
-
-                if (pedido[i] == "Arroz chaufa")
-                    precio = 15;
-                else if (pedido[i] == "Tallarín saltado")
-                    precio = 16;
-                else if (pedido[i] == "Pollo con verduras")
-                    precio = 18;
-                else if (pedido[i] == "Pollo Chi Jau Kay")
-                    precio = 20;
-                else if (pedido[i] == "Pollo Tipakay")
-                    precio = 20;
-                else if (pedido[i] == "Aeropuerto")
-                    precio = 17;
-                else if (pedido[i] == "Lomo saltado")
-                    precio = 22;
-                else if (pedido[i] == "Kam Lu Wantán")
-                    precio = 20;
-                else if (pedido[i] == "Wantán frito")
-                    precio = 8;
-                else if (pedido[i] == "Sopa wantán")
-                    precio = 10;
-                else if (pedido[i] == "Rollito primavera")
-                    precio = 7;
-                else if (pedido[i] == "Inca Kola")
-                    precio = 4;
-                else if (pedido[i] == "Coca-Cola")
-                    precio = 4;
-                else if (pedido[i] == "Chicha morada")
-                    precio = 5;
-                else if (pedido[i] == "Limonada")
-                    precio = 5;
-
-                Console.WriteLine(pedido[i] + " - S/ " + precio);
-
+                double precio = ObtenerPrecio(pedido[cliente, i]);
+                sb.AppendLine(pedido[cliente, i] + " - S/ " + precio);
                 totalPedidos += precio;
             }
 
             double costoDelivery = 0;
 
-            for (int i = 0; i < contadorPedidos; i++)
-            { 
-                if (delivery[i])
-                {
-                    Console.WriteLine("Pedido por delivery.");
-                }
-                else
-                {
-                    Console.WriteLine("Pedido para salón.");
-                }
-                if (distrito[i] == "San Martín de Porres")
-                    costoDelivery = 3;
-                else if (distrito[i] == "Los Olivos")
-                    costoDelivery = 4;
-                else if (distrito[i] == "Independencia")
-                    costoDelivery = 4;
-                else if (distrito[i] == "Rímac")
-                    costoDelivery = 5;
-                else if (distrito[i] == "Comas")
-                    costoDelivery = 6;
-                else if (distrito[i] == "Cercado de Lima")
-                    costoDelivery = 6;
-                else if (distrito[i] == "Carmen de la Legua-Reynoso")
-                    costoDelivery = 7;
-                else if (distrito[i] == "Callao")
-                    costoDelivery = 7;
-                else if (distrito[i] == "Puente Piedra")
-                    costoDelivery = 8;
-                else if (distrito[i] == "Ventanilla")
-                    costoDelivery = 10;
-
-                Console.WriteLine("Distrito: " + distrito[i]);
-                Console.WriteLine("Costo de delivery: S/ " + costoDelivery);
+            if (delivery[cliente])
+            {
+                costoDelivery = ObtenerCostoDelivery(distrito[cliente]);
+                sb.AppendLine("Distrito: " + distrito[cliente]);
+                sb.AppendLine("Costo de delivery: S/ " + costoDelivery);
             }
 
             double total = totalPedidos + costoDelivery;
 
-            Console.WriteLine("--------------------------------");
-            Console.WriteLine("Subtotal: S/ " + totalPedidos);
-            Console.WriteLine("Total a pagar: S/ " + total);
+            sb.AppendLine("--------------------------------");
+            sb.AppendLine("Subtotal: S/ " + totalPedidos);
+            sb.AppendLine("Total a pagar: S/ " + total);
+
+            string texto = sb.ToString();
+            Console.Write(texto);
+
+            boleta[cliente] = texto;
+            totalCliente[cliente] = total;
 
             return total;
         }
+        static void EliminarCliente(int indice)
+        {
+            for (int i = indice; i < contador - 1; i++)
+            {
+                Nombre[i] = Nombre[i + 1];
+                Direccion[i] = Direccion[i + 1];
+                Telefono[i] = Telefono[i + 1];
+                distrito[i] = distrito[i + 1];
+                metodoPago[i] = metodoPago[i + 1];
+                delivery[i] = delivery[i + 1];
+                estado[i] = estado[i + 1];
+                boleta[i] = boleta[i + 1];
+                totalCliente[i] = totalCliente[i + 1];
+                cantidadPedidos[i] = cantidadPedidos[i + 1];
+                for (int k = 0; k < maxItems; k++)
+                {
+                    pedido[i, k] = pedido[i + 1, k];
+                }
+            }
 
+            int ultimo = contador - 1;
+            Nombre[ultimo] = null;
+            Direccion[ultimo] = null;
+            Telefono[ultimo] = null;
+            distrito[ultimo] = null;
+            metodoPago[ultimo] = null;
+            delivery[ultimo] = false;
+            estado[ultimo] = null;
+            boleta[ultimo] = null;
+            totalCliente[ultimo] = 0;
+            cantidadPedidos[ultimo] = 0;
+            for (int k = 0; k < maxItems; k++)
+            {
+                pedido[ultimo, k] = null;
+            }
+
+            contador--;
+        }
+        static public void MostrarHistorial()
+        {
+            Console.WriteLine("*****HISTORIAL DE VENTAS DEL DÍA*****");
+
+            if (!File.Exists(rutaHistorial))
+            {
+                Console.WriteLine("Aún no hay pedidos entregados.");
+                return;
+            }
+
+            Console.WriteLine(File.ReadAllText(rutaHistorial));
+            Console.WriteLine("Total vendido en esta sesión: S/ " + totalVendido);
+        }
+        static public void ActualizarEstadoPedido()
+        {
+            Console.WriteLine("*****ACTUALIZAR ESTADO DEL PEDIDO*****");
+
+            if (contador == 0)
+            {
+                Console.WriteLine("No hay pedidos registrados.");
+                return;
+            }
+
+            for (int i = 0; i < contador; i++)
+            {
+                Console.WriteLine((i + 1) + ". " + Nombre[i] + " - " + estado[i]);
+            }
+
+            Console.Write("Ingrese el número del pedido: ");
+            string entrada = Console.ReadLine() ?? "";
+
+            if (!int.TryParse(entrada, out int opcion) || opcion < 1 || opcion > contador)
+            {
+                Console.WriteLine("Opción inválida.");
+                return;
+            }
+
+            int cliente = opcion - 1;
+
+            if (estado[cliente] == "Pendiente")
+            {
+                Console.WriteLine("El pedido de " + Nombre[cliente] + " está listo para entrega.");
+                GuardarEnHistorial(cliente);
+                EliminarCliente(cliente);
+                Console.WriteLine("Pedido eliminado de la lista y guardado en el historial.");
+            }
+        }
+        static void GuardarEnHistorial(int cliente)
+        {
+            string encabezado = "Cliente: " + Nombre[cliente] + " - " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " - Pago: " + metodoPago[cliente];
+            File.AppendAllText(rutaHistorial, encabezado + Environment.NewLine + boleta[cliente] + Environment.NewLine);
+            totalVendido += totalCliente[cliente];
+        }
         static void Main(string[] args)
         {
-            Title();
-            Menu();
             int Op = 0;
-            while (Op != 8)
+            while (Op != 7)
             {
+                Console.Clear();
+                Title();
+                Console.WriteLine("1. Registrar pedido");
+                Console.WriteLine("2. Validar datos del pedido");
+                Console.WriteLine("3. Actualizar estado del pedido");
+                Console.WriteLine("4. Ver historial de ventas");
+                Console.WriteLine("5. Salir");
                 Console.WriteLine("Ingrese una opción:");
-                Op = int.Parse(Console.ReadLine());
+                if (!int.TryParse(Console.ReadLine(), out Op))
+                {
+                    Console.WriteLine("!!!!ERROR: Ingrese una opción numerica...!!!!");
+                    continue;
+                }
                 switch (Op)
                 {
                     case 1:
@@ -452,13 +531,21 @@ namespace Sistema_de_pedidos
                     case 2:
                         ValidarDatosPedido();
                         break;
-                    case 8:
+                    case 3:
+                        ActualizarEstadoPedido();
+                        break;
+                    case 4:
+                        MostrarHistorial();
+                        break;
+                    case 5:
                         Console.WriteLine("Saliendo del sistema...");
                         break;
                     default:
                         Console.WriteLine("Opción no válida.");
                         break;
                 }
+                Console.ReadKey();
+
             }
         }
     }
