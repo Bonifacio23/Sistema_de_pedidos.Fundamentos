@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -132,7 +132,7 @@ namespace Sistema_de_pedidos
                             Console.WriteLine("El teléfono no es válido. Debe contener exactamente 9 dígitos.");
                         }
                     }
-                    Console.WriteLine("Teléfono registrado correctamente."); 
+                    Console.WriteLine("Teléfono registrado correctamente.");
 
 
                     bool distritoValido = false;
@@ -183,13 +183,13 @@ namespace Sistema_de_pedidos
                 Metodo_pago();
 
             }
-            
+
             else
             {
                 Console.WriteLine("Se alcanzó el límite máximo de pedidos.");
             }
         }
-    
+
         static double ObtenerCostoDelivery(string d)
         {
             switch (d)
@@ -238,7 +238,7 @@ namespace Sistema_de_pedidos
                 default: return 0;
             }
         }
-        static public void Metodo_pago() 
+        static public void Metodo_pago()
         {
             Console.WriteLine("Seleccione el método de pago:");
             Console.WriteLine("1. Yape");
@@ -278,7 +278,7 @@ namespace Sistema_de_pedidos
 
             Console.WriteLine("Pedido registrado exitosamente.");
 
-            
+
             estado[contador] = "Pendiente";
             contador++;
 
@@ -286,54 +286,82 @@ namespace Sistema_de_pedidos
         static public void Menu(int cliente)
         {
             int opcion = 0;
+
+        
+            List<string> platosMenu = new List<string>(platos);
+
             while (opcion != 16)
             {
                 Console.Clear();
                 Console.WriteLine("\nSeleccione el pedido:");
-                Console.WriteLine("1. Arroz chaufa              S/ 15");
-                Console.WriteLine("2. Tallarín saltado          S/ 16");
-                Console.WriteLine("3. Pollo con verduras        S/ 18");
-                Console.WriteLine("4. Pollo Chi Jau Kay         S/ 20");
-                Console.WriteLine("5. Pollo Tipakay             S/ 20");
-                Console.WriteLine("6. Aeropuerto                S/ 17");
-                Console.WriteLine("7. Lomo saltado              S/ 22");
-                Console.WriteLine("8. Kam Lu Wantán             S/ 20");
-                Console.WriteLine("9. Wantán frito              S/ 8");
-                Console.WriteLine("10. Sopa wantán              S/ 10");
-                Console.WriteLine("11. Rollito primavera        S/ 7");
-                Console.WriteLine("12. Inca Kola                S/ 4");
-                Console.WriteLine("13. Coca-Cola                S/ 4");
-                Console.WriteLine("14. Chicha morada            S/ 5");
-                Console.WriteLine("15. Limonada                 S/ 5");
+
+                for (int i = 0; i < platosMenu.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {platosMenu[i],-25} S/ {ObtenerPrecio(platosMenu[i])}");
+                }
+
                 Console.WriteLine("16. Salir del menú de pedidos");
-                Console.WriteLine("Ingrese el número del plato que desea pedir:");
+                Console.WriteLine("17. Ordenar alfabéticamente (A-Z)");
+                Console.WriteLine("18. Ordenar por precio (menor a mayor)");
+                Console.Write("Ingrese una opción: ");
 
-                opcion = int.Parse(Console.ReadLine());
+                if (!int.TryParse(Console.ReadLine(), out opcion))
+                {
+                    Console.WriteLine("Opción inválida. Ingrese un número.");
+                    Console.ReadKey();
+                    opcion = 0;
+                    continue;
+                }
 
-                if (opcion >= 1 && opcion <= 15)
+                if (opcion >= 1 && opcion <= platosMenu.Count)
                 {
                     if (cantidadPedidos[cliente] >= maxItems)
                     {
                         Console.WriteLine("Se alcanzó el límite de platos por cliente.");
+                        Console.ReadKey();
                         continue;
                     }
-                    pedido[cliente, cantidadPedidos[cliente]] = platos[opcion - 1];
-                    Console.WriteLine("Plato seleccionado: " + platos[opcion - 1]);
+
+                    string platoSeleccionado = platosMenu[opcion - 1];
+                    pedido[cliente, cantidadPedidos[cliente]] = platoSeleccionado;
+                    Console.WriteLine("Plato seleccionado: " + platoSeleccionado);
                     cantidadPedidos[cliente]++;
+                    Console.WriteLine("Presione una tecla para continuar...");
+                    Console.ReadKey();
                 }
                 else if (opcion == 16)
                 {
                     if (cantidadPedidos[cliente] == 0)
                     {
-                        Console.WriteLine("No ha seleccionado ningun pedido");
+                        Console.WriteLine("No ha seleccionado ningún pedido.");
+                        Console.ReadKey();
                         opcion = 0;
                         continue;
                     }
+
                     Console.WriteLine("Saliendo del menú de pedidos.");
+                }
+                else if (opcion == 17)
+                {
+                    platosMenu = platos.OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase).ToList();
+                    Console.WriteLine("Menú ordenado alfabéticamente de la A a la Z.");
+                    Console.ReadKey();
+                    opcion = 0;
+                }
+                else if (opcion == 18)
+                {
+                    platosMenu = platos.OrderBy(p => ObtenerPrecio(p))
+                                       .ThenBy(p => p, StringComparer.CurrentCultureIgnoreCase)
+                                       .ToList();
+                    Console.WriteLine("Menú ordenado por precio, de menor a mayor.");
+                    Console.ReadKey();
+                    opcion = 0;
                 }
                 else
                 {
-                    Console.WriteLine("Opción de plato inválida.");
+                    Console.WriteLine("Opción inválida.");
+                    Console.ReadKey();
+                    opcion = 0;
                 }
             }
         }
