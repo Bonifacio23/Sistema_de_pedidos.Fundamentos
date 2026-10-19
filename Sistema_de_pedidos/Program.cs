@@ -85,6 +85,12 @@ namespace Sistema_de_pedidos
                 cantidadPedidos[contador] = 0;
                 Console.WriteLine("Ingrese el nombre del cliente:");
                 Nombre[contador] = Console.ReadLine()?.Trim();
+                if (string.IsNullOrWhiteSpace(Nombre[contador]))
+                {
+                    Console.WriteLine("El nombre del cliente no puede estar vacío.");
+                    return;
+                }
+                
 
 
                 Console.WriteLine("¿El pedido será por delivery o para salón? (d/s):");
@@ -239,49 +245,79 @@ namespace Sistema_de_pedidos
             }
         }
         static public void Metodo_pago()
+
         {
-            Console.WriteLine("Seleccione el método de pago:");
-            Console.WriteLine("1. Yape");
-            Console.WriteLine("2. Plin");
-            Console.WriteLine("3. Tarjeta");
-            Console.WriteLine("4. Efectivo");
+
+            bool pagoValido = false;
 
 
-            int pago = int.Parse(Console.ReadLine());
 
-            switch (pago)
+            while (!pagoValido)
             {
-                case 1:
-                    Console.WriteLine("Pago con Yape.");
-                    metodoPago[contador] = "Yape";
-                    break;
+                
+                Console.WriteLine("Seleccione el método de pago:");
+                Console.WriteLine("1. Yape");
+                Console.WriteLine("2. Plin");
+                Console.WriteLine("3. Tarjeta");
+                Console.WriteLine("4. Efectivo");
 
-                case 2:
-                    Console.WriteLine("Pago con Plin.");
-                    metodoPago[contador] = "Plin";
-                    break;
+                try
+                {
+                    int pago = int.Parse(Console.ReadLine());
 
-                case 3:
-                    Console.WriteLine("Pago con tarjeta.");
-                    metodoPago[contador] = "Tarjeta";
-                    break;
+                    switch (pago)
 
-                case 4:
-                    Console.WriteLine("Pago en efectivo.");
-                    metodoPago[contador] = "Efectivo";
-                    break;
+                    {
+                        case 1:
 
-                default:
-                    Console.WriteLine("Método de pago inválido.");
-                    return;
+                            Console.WriteLine("Pago con Yape.");
+                            metodoPago[contador] = "Yape";
+                            pagoValido = true; 
+                            break;
+
+                        case 2:
+
+                            Console.WriteLine("Pago con Plin.");
+                            metodoPago[contador] = "Plin";
+                            pagoValido = true;
+                            break;
+
+                        case 3:
+
+                            Console.WriteLine("Pago con tarjeta.");
+                            metodoPago[contador] = "Tarjeta";
+                            pagoValido = true;
+                            break;
+
+                        case 4:
+
+                            Console.WriteLine("Pago en efectivo.");
+                            metodoPago[contador] = "Efectivo";
+                            pagoValido = true;
+                            break;
+
+                        default:
+                            Console.WriteLine("Opción inválida. Elija un número del 1 al 4.\n");                       
+                            break;
+                    }
+                }
+
+                catch (FormatException)
+                {
+                    Console.WriteLine("Error: Debe ingresar un número válido (no letras).\n");
+                    
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ocurrió un error inesperado: {ex.Message}\n");
+                    
+                }
+
             }
 
             Console.WriteLine("Pedido registrado exitosamente.");
-
-
             estado[contador] = "Pendiente";
             contador++;
-
         }
         static public void Menu(int cliente)
         {
