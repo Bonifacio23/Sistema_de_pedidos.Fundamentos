@@ -536,7 +536,7 @@ namespace Sistema_de_pedidos
         static void Main(string[] args)
         {
             int Op = 0;
-            while (Op != 7)
+            while (Op != 5)
             {
                 Console.Clear();
                 Title();
