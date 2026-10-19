@@ -344,7 +344,7 @@ namespace Sistema_de_pedidos
                 else if (opcion == 17)
                 {
                     platosMenu = platos.OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase).ToList();
-                    Console.WriteLine("Menú ordenado alfabéticamente de la A a la Z.");
+                    Console.WriteLine("Menú ordenado alfabéticamente de la A a la Z. Presione un cualquier tecla para actualizar");
                     Console.ReadKey();
                     opcion = 0;
                 }
@@ -353,7 +353,7 @@ namespace Sistema_de_pedidos
                     platosMenu = platos.OrderBy(p => ObtenerPrecio(p))
                                        .ThenBy(p => p, StringComparer.CurrentCultureIgnoreCase)
                                        .ToList();
-                    Console.WriteLine("Menú ordenado por precio, de menor a mayor.");
+                    Console.WriteLine("Menú ordenado por precio, de menor a mayor. Presione un cualquier tecla para actualizar");
                     Console.ReadKey();
                     opcion = 0;
                 }
