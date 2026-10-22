@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,8 +13,10 @@ namespace Sistema_de_pedidos
     internal class Program
     {
 
+
         static int maxItems = 50;
         static string[,] pedido = new string[maxItems, maxItems];
+        static int[,] cantidades = new int[maxItems, maxItems];
         static int[] cantidadPedidos = new int[maxItems];
         static bool[] delivery = new bool[maxItems];
         static string[] Nombre = new string[maxItems];
@@ -21,6 +25,7 @@ namespace Sistema_de_pedidos
 
         static string[] boleta = new string[maxItems];
         static double[] totalCliente = new double[maxItems];
+        static Dictionary<string, int> ventasDelDia = new Dictionary<string, int>();
         static double totalVendido = 0;
         static string rutaHistorial = "historial.txt";
         static string[] metodoPago = new string[maxItems];
@@ -83,14 +88,25 @@ namespace Sistema_de_pedidos
             {
 
                 cantidadPedidos[contador] = 0;
-                Console.WriteLine("Ingrese el nombre del cliente:");
-                Nombre[contador] = Console.ReadLine()?.Trim();
-                if (string.IsNullOrWhiteSpace(Nombre[contador]))
+                string patronNombre = @"\A[A-Za-zÁÉÍÓÚáéíóúÑñ]+(\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*\z";
+                bool nombreValido = false;
+
+                while (!nombreValido)
                 {
-                    Console.WriteLine("El nombre del cliente no puede estar vacío.");
-                    return;
+                    Console.WriteLine("Ingrese el nombre del cliente:");
+                    string entradaNombre = (Console.ReadLine() ?? "").Trim();
+
+                    if (Regex.IsMatch(entradaNombre, patronNombre))
+                    {
+                        Nombre[contador] = entradaNombre;
+                        nombreValido = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("El nombre no es válido. Use solo letras y espacios.");
+                    }
                 }
-                
+
 
 
                 Console.WriteLine("¿El pedido será por delivery o para salón? (d/s):");
@@ -106,7 +122,7 @@ namespace Sistema_de_pedidos
                     while (!direccionValida)
                     {
                         Console.WriteLine("Ingrese la dirección:");
-                        Direccion[contador] = Console.ReadLine() ?? "".Trim();
+                        Direccion[contador] = (Console.ReadLine() ?? "").Trim();
 
                         if (Regex.IsMatch(Direccion[contador], patronDireccion))
                         {
@@ -127,7 +143,7 @@ namespace Sistema_de_pedidos
                     while (!telefonoValido)
                     {
                         Console.WriteLine("Ingrese el teléfono:");
-                        Telefono[contador] = Console.ReadLine() ?? "".Trim();
+                        Telefono[contador] = (Console.ReadLine() ?? "").Trim();
 
                         if (Regex.IsMatch(Telefono[contador], patronTelefono))
                         {
@@ -154,7 +170,7 @@ namespace Sistema_de_pedidos
 
 
                         Console.Write("Ingrese el número del distrito: ");
-                        string entrada = Console.ReadLine() ?? "".Trim();
+                        string entrada = (Console.ReadLine() ?? "").Trim();
 
                         if (int.TryParse(entrada, out int opcionDistrito) &&
                             opcionDistrito >= 1 &&
@@ -186,7 +202,7 @@ namespace Sistema_de_pedidos
 
                 Menu(contador);
                 double total = CalcularTotal(contador);
-                Metodo_pago();
+                Metodo_pago(contador);
 
             }
 
@@ -244,7 +260,7 @@ namespace Sistema_de_pedidos
                 default: return 0;
             }
         }
-        static public void Metodo_pago()
+        static public void Metodo_pago(int cliente)
 
         {
 
@@ -271,28 +287,43 @@ namespace Sistema_de_pedidos
                         case 1:
 
                             Console.WriteLine("Pago con Yape.");
-                            metodoPago[contador] = "Yape";
+                            metodoPago[cliente] = "Yape";
                             pagoValido = true; 
                             break;
 
                         case 2:
 
                             Console.WriteLine("Pago con Plin.");
-                            metodoPago[contador] = "Plin";
+                            metodoPago[cliente] = "Plin";
                             pagoValido = true;
                             break;
 
                         case 3:
 
                             Console.WriteLine("Pago con tarjeta.");
-                            metodoPago[contador] = "Tarjeta";
+                            metodoPago[cliente] = "Tarjeta";
                             pagoValido = true;
                             break;
 
                         case 4:
 
                             Console.WriteLine("Pago en efectivo.");
-                            metodoPago[contador] = "Efectivo";
+                            metodoPago[cliente] = "Efectivo";
+                            double total = 0;
+                            for (int i = 0; i < cantidadPedidos[cliente]; i++)
+                            {
+                                double precio = ObtenerPrecio(pedido[cliente, i]);
+                                total += cantidades[cliente, i] * precio;
+                            }
+                            Console.WriteLine("Cuanto dinero entregará el cliente?");
+                            int dineroEntregado;
+                            while (!int.TryParse(Console.ReadLine(), out dineroEntregado) || dineroEntregado < 0 || dineroEntregado < total)
+                            {
+                                Console.WriteLine($"Ingrese una cantidad válida");
+                            }
+                            
+
+                            Console.WriteLine($"Su vuelto es S/ {dineroEntregado - total}");
                             pagoValido = true;
                             break;
 
@@ -318,6 +349,40 @@ namespace Sistema_de_pedidos
             Console.WriteLine("Pedido registrado exitosamente.");
             estado[contador] = "Pendiente";
             contador++;
+        }
+        static public void Platosmasvendidos()
+        {
+            var total = new Dictionary<string, int>(ventasDelDia);
+            for (int i = 0; i < contador; i++)
+            {
+                for (int j = 0; j < cantidadPedidos[i]; j++)
+                {
+                    string plato = pedido[i, j];
+                    if (plato == null)
+                    {
+                        continue;
+                    }
+                    if (total.ContainsKey(plato))
+                    {
+                        total[plato] += cantidades[i, j];
+                    }
+                    else
+                    {
+                        total[plato] = cantidades[i, j];
+                    }
+                }
+            }
+            if (total.Count == 0)
+            {
+                Console.WriteLine("Aun no hay pedidos registrados.");
+                return;
+            }
+            var topPlatos = total.OrderByDescending(p => p.Value).ThenBy(p => p.Key).Take(3);
+            Console.WriteLine("Los 3 platos mas vendidos del dia son:");
+            foreach (var plato in topPlatos)
+            {
+                Console.WriteLine($"{plato.Key} - Cantidad vendida: {plato.Value}");
+            }
         }
         static public void Menu(int cliente)
         {
@@ -348,6 +413,7 @@ namespace Sistema_de_pedidos
                     opcion = 0;
                     continue;
                 }
+                
 
                 if (opcion >= 1 && opcion <= platosMenu.Count)
                 {
@@ -359,8 +425,23 @@ namespace Sistema_de_pedidos
                     }
 
                     string platoSeleccionado = platosMenu[opcion - 1];
-                    pedido[cliente, cantidadPedidos[cliente]] = platoSeleccionado;
                     Console.WriteLine("Plato seleccionado: " + platoSeleccionado);
+                    if (opcion >= 12 && opcion <= 15)
+                    {
+                        Console.WriteLine("Cuantas bebidas desea agregar?");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Cuantos platos desea agregar?");
+                    }
+                    int cantidad;
+                    while(!int.TryParse(Console.ReadLine(), out cantidad) || cantidad <= 0)
+                    {
+                        Console.WriteLine("Ingrese una cantidad válida (mayor a 0):");
+                    }
+                    pedido[cliente, cantidadPedidos[cliente]] = platoSeleccionado;
+                    cantidades[cliente, cantidadPedidos[cliente]] = cantidad;
+                    Console.WriteLine("Agregado: " + cantidad + " x " + platoSeleccionado);
                     cantidadPedidos[cliente]++;
                     Console.WriteLine("Presione una tecla para continuar...");
                     Console.ReadKey();
@@ -416,7 +497,7 @@ namespace Sistema_de_pedidos
                         Console.WriteLine($"Pedido de {Nombre[i]}:");
                         for (int j = 0; j < cantidadPedidos[i]; j++)
                         {
-                            Console.WriteLine($"- {pedido[i, j]}");
+                            Console.WriteLine($"{cantidades[i, j]} x {pedido[i, j]}");
                         }
 
                         if (delivery[i])
@@ -451,8 +532,8 @@ namespace Sistema_de_pedidos
             for (int i = 0; i < cantidadPedidos[cliente]; i++)
             {
                 double precio = ObtenerPrecio(pedido[cliente, i]);
-                sb.AppendLine(pedido[cliente, i] + " - S/ " + precio);
-                totalPedidos += precio;
+                sb.AppendLine(pedido[cliente, i] + " x " + cantidades[cliente, i] + " - S/ " + cantidades[cliente, i] * precio);
+                totalPedidos += cantidades[cliente, i] * precio;
             }
 
             double costoDelivery = 0;
@@ -495,6 +576,7 @@ namespace Sistema_de_pedidos
                 for (int k = 0; k < maxItems; k++)
                 {
                     pedido[i, k] = pedido[i + 1, k];
+                    cantidades[i, k] = cantidades[i + 1, k];
                 }
             }
 
@@ -512,6 +594,7 @@ namespace Sistema_de_pedidos
             for (int k = 0; k < maxItems; k++)
             {
                 pedido[ultimo, k] = null;
+                cantidades[ultimo, k] = 0;
             }
 
             contador--;
@@ -562,17 +645,38 @@ namespace Sistema_de_pedidos
                 EliminarCliente(cliente);
                 Console.WriteLine("Pedido eliminado de la lista y guardado en el historial.");
             }
+            else
+            {
+                Console.WriteLine("El pedido de " + Nombre[cliente] + " ya ha sido entregado.");
+            }
         }
         static void GuardarEnHistorial(int cliente)
         {
             string encabezado = "Cliente: " + Nombre[cliente] + " - " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " - Pago: " + metodoPago[cliente];
             File.AppendAllText(rutaHistorial, encabezado + Environment.NewLine + boleta[cliente] + Environment.NewLine);
             totalVendido += totalCliente[cliente];
+
+            for (int j = 0; j < cantidadPedidos[cliente]; j++)
+            {
+                string plato = pedido[cliente, j];
+                if (plato == null)
+                {
+                    continue;
+                }
+                if (ventasDelDia.ContainsKey(plato))
+                {
+                    ventasDelDia[plato] += cantidades[cliente, j];
+                }
+                else
+                {
+                    ventasDelDia[plato] = cantidades[cliente, j];
+                }
+            }
         }
         static void Main(string[] args)
         {
             int Op = 0;
-            while (Op != 5)
+            while (Op != 6)
             {
                 Console.Clear();
                 Title();
@@ -580,7 +684,8 @@ namespace Sistema_de_pedidos
                 Console.WriteLine("2. Validar datos del pedido");
                 Console.WriteLine("3. Actualizar estado del pedido");
                 Console.WriteLine("4. Ver historial de ventas");
-                Console.WriteLine("5. Salir");
+                Console.WriteLine("5. Platos más vendidos del día");
+                Console.WriteLine("6. Salir");
                 Console.WriteLine("Ingrese una opción:");
                 if (!int.TryParse(Console.ReadLine(), out Op))
                 {
@@ -602,6 +707,9 @@ namespace Sistema_de_pedidos
                         MostrarHistorial();
                         break;
                     case 5:
+                        Platosmasvendidos();
+                        break;
+                    case 6:
                         Console.WriteLine("Saliendo del sistema...");
                         break;
                     default:
