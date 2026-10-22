@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="GUI/GUI.csproj" Id="a9ccc263-d995-4062-a5a5-4b0877d359a6" />
   <Project Path="Sistema_de_pedidos/Sistema_de_pedidos.csproj" Id="f0cf709d-077a-42fb-9150-b2f9633225c8" />
 </Solution>
