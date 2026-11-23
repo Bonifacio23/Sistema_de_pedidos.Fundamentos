@@ -399,8 +399,6 @@ namespace Sistema_de_pedidos
                 }
 
                 Console.WriteLine("16. Salir del menú de pedidos");
-                Console.WriteLine("17. Ordenar alfabéticamente (A-Z)");
-                Console.WriteLine("18. Ordenar por precio (menor a mayor)");
                 Console.Write("Ingrese una opción: ");
 
                 if (!int.TryParse(Console.ReadLine(), out opcion))
@@ -455,22 +453,6 @@ namespace Sistema_de_pedidos
 
                     Console.WriteLine("Saliendo del menú de pedidos.");
                 }
-                else if (opcion == 17)
-                {
-                    platosMenu = platos.OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase).ToList();
-                    Console.WriteLine("Menú ordenado alfabéticamente de la A a la Z. Presione un cualquier tecla para actualizar");
-                    Console.ReadKey();
-                    opcion = 0;
-                }
-                else if (opcion == 18)
-                {
-                    platosMenu = platos.OrderBy(p => ObtenerPrecio(p))
-                                       .ThenBy(p => p, StringComparer.CurrentCultureIgnoreCase)
-                                       .ToList();
-                    Console.WriteLine("Menú ordenado por precio, de menor a mayor. Presione un cualquier tecla para actualizar");
-                    Console.ReadKey();
-                    opcion = 0;
-                }
                 else
                 {
                     Console.WriteLine("Opción inválida.");
@@ -524,7 +506,7 @@ namespace Sistema_de_pedidos
             bool esFactura = tipoDoc[cliente] == "f";
 
             sb.AppendLine("------------------------------");
-            sb.AppendLine(esFactura ? " FACTURA DE PAGO" : " BOLETA DE PAGO");
+            sb.AppendLine(esFactura ? " \tFACTURA DE PAGO" : " \tBOLETA DE PAGO");
             sb.AppendLine("------------------------------");
 
             for (int i = 0; i < cantidadPedidos[cliente]; i++)
