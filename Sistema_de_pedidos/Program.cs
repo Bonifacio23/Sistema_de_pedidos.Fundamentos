@@ -4,9 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Sistema_de_pedidos
 {
@@ -32,38 +34,42 @@ namespace Sistema_de_pedidos
         static int contador = 0;
         static string[] estado = new string[maxItems];
         static string[] distrito = new string[maxItems];
-
-        static public List<string> platos = new List<string>
+        static string[] tipoDoc = new string[maxItems];
+        static string[] rucCliente = new string[maxItems];
+        static public Dictionary<string, double> precios = new Dictionary<string, double>
+        {
+            { "Arroz chaufa", 15 },
+            { "Tallarín saltado", 16 },
+            { "Pollo con verduras", 18 },
+            { "Pollo Chi Jau Kay", 20},
+            { "Pollo Tipakay", 20 },
+            { "Aeropuerto", 17 },
+            { "Lomo saltado", 22 },
+            { "Kam Lu Wantán", 20 },
+            { "Wantán frito", 8 },
+            { "Sopa wantán", 10 },
+            { "Rollito primavera", 7 },
+            { "Inca Kola", 4 },
+            { "Coca-Cola", 4 },
+            { "Chicha morada", 5 },
+            { "Limonada", 5 }
+        };
+                                                         
+        static public Dictionary<string, double> costosDelivery = new Dictionary<string, double>
 {
-    "Arroz chaufa",
-    "Tallarín saltado",
-    "Pollo con verduras",
-    "Pollo Chi Jau Kay",
-    "Pollo Tipakay",
-    "Aeropuerto",
-    "Lomo saltado",
-    "Kam Lu Wantán",
-    "Wantán frito",
-    "Sopa wantán",
-    "Rollito primavera",
-    "Inca Kola",
-    "Coca-Cola",
-    "Chicha morada",
-    "Limonada"
+{ "San Martín de Porres", 3 },
+{ "Los Olivos", 4 },
+{ "Independencia", 4 },
+{ "Rímac", 5 },
+{ "Comas", 6 },
+{ "Cercado de Lima", 6 },
+{ "Carmen de la Legua-Reynoso", 7 },
+{ "Callao", 7 },
+{ "Puente Piedra", 8 },
+{ "Ventanilla", 10 }
 };
-        static public List<string> distritos = new List<string>
-{
-    "San Martín de Porres",
-    "Los Olivos",
-    "Independencia",
-    "Rímac",
-    "Comas",
-    "Puente Piedra",
-    "Cercado de Lima",
-    "Callao",
-    "Carmen de la Legua-Reynoso",
-    "Ventanilla"
-};
+        static public List<string> platos = precios.Keys.ToList();
+        static public List<string> distritos = costosDelivery.Keys.ToList();
 
         static public void Title()
         {
@@ -201,7 +207,8 @@ namespace Sistema_de_pedidos
                 }
 
                 Menu(contador);
-                double total = CalcularTotal(contador);
+                PedirDocumento(contador);
+                CalcularTotal(contador);
                 Metodo_pago(contador);
 
             }
@@ -211,55 +218,49 @@ namespace Sistema_de_pedidos
                 Console.WriteLine("Se alcanzó el límite máximo de pedidos.");
             }
         }
-
+        static void PedirDocumento(int cliente)
+        {
+            Console.WriteLine("El cliente desea boleta o factura(b / f): ");
+            string tipo = (Console.ReadLine() ?? "").Trim().ToLower();
+            while (tipo != "b" && tipo != "f")
+            {
+                Console.WriteLine("Opción inválida.Escriba b o f:");
+                tipo = (Console.ReadLine() ?? "").Trim().ToLower();
+            }
+            tipoDoc[cliente] = tipo;
+            rucCliente[cliente] = "";
+            if (tipo == "f")
+            {
+                Console.WriteLine("Ingrese el RUC del cliente: ");
+                string ruc = (Console.ReadLine() ?? "").Trim();
+                while (!Regex.IsMatch(ruc, @"\A(10|20)[0-9]{9}\z"))
+                {
+                    Console.WriteLine("RUC inválido.Debe tener 11 dígitos y empezar con 10 o 20:");
+                    ruc = (Console.ReadLine() ?? "").Trim();
+                }
+                rucCliente[cliente] = ruc;
+            }
+        }
         static double ObtenerCostoDelivery(string d)
         {
-            switch (d)
+            if (costosDelivery.TryGetValue(d, out double costo))
             {
-                case "San Martín de Porres":
-                    return 3;
-                case "Los Olivos":
-                case "Independencia":
-                    return 4;
-                case "Rímac":
-                    return 5;
-                case "Comas":
-                case "Cercado de Lima":
-                    return 6;
-                case "Carmen de la Legua-Reynoso":
-                case "Callao":
-                    return 7;
-                case "Puente Piedra":
-                    return 8;
-                case "Ventanilla":
-                    return 10;
-                default:
-                    Console.WriteLine("Distrito no válido.");
-                    return 0;
+                return costo;
             }
+            Console.WriteLine("Distrito no válido");
+            return 0;
         }
+
         static double ObtenerPrecio(string plato)
         {
-            switch (plato)
+            if (precios.TryGetValue(plato, out double precio))
             {
-                case "Arroz chaufa": return 15;
-                case "Tallarín saltado": return 16;
-                case "Pollo con verduras": return 18;
-                case "Pollo Chi Jau Kay": return 20;
-                case "Pollo Tipakay": return 20;
-                case "Aeropuerto": return 17;
-                case "Lomo saltado": return 22;
-                case "Kam Lu Wantán": return 20;
-                case "Wantán frito": return 8;
-                case "Sopa wantán": return 10;
-                case "Rollito primavera": return 7;
-                case "Inca Kola": return 4;
-                case "Coca-Cola": return 4;
-                case "Chicha morada": return 5;
-                case "Limonada": return 5;
-                default: return 0;
+                return precio;
             }
+            Console.WriteLine("Plato no válido");
+            return 0;
         }
+
         static public void Metodo_pago(int cliente)
 
         {
@@ -279,7 +280,7 @@ namespace Sistema_de_pedidos
 
                 try
                 {
-                    int pago = int.Parse(Console.ReadLine());
+                    int valido = int.TryParse(Console.ReadLine(), out int pago) ? pago : 0;
 
                     switch (pago)
 
@@ -309,15 +310,11 @@ namespace Sistema_de_pedidos
 
                             Console.WriteLine("Pago en efectivo.");
                             metodoPago[cliente] = "Efectivo";
-                            double total = 0;
-                            for (int i = 0; i < cantidadPedidos[cliente]; i++)
-                            {
-                                double precio = ObtenerPrecio(pedido[cliente, i]);
-                                total += cantidades[cliente, i] * precio;
-                            }
+                            double total = totalCliente[cliente];
+
                             Console.WriteLine("Cuanto dinero entregará el cliente?");
-                            int dineroEntregado;
-                            while (!int.TryParse(Console.ReadLine(), out dineroEntregado) || dineroEntregado < 0 || dineroEntregado < total)
+                            double dineroEntregado;
+                            while (!double.TryParse(Console.ReadLine(), out dineroEntregado) || dineroEntregado < 0 || dineroEntregado < total)
                             {
                                 Console.WriteLine($"Ingrese una cantidad válida");
                             }
@@ -520,45 +517,52 @@ namespace Sistema_de_pedidos
             }
             Console.WriteLine("Cliente no encontrado.");
         }
-        static public double CalcularTotal(int cliente)
+        static public double CalcularTotal(int cliente, bool mostrar = true)
         {
             StringBuilder sb = new StringBuilder();
             double totalPedidos = 0;
+            bool esFactura = tipoDoc[cliente] == "f";
 
             sb.AppendLine("------------------------------");
-            sb.AppendLine("       BOLETA DE PAGO");
+            sb.AppendLine(esFactura ? " FACTURA DE PAGO" : " BOLETA DE PAGO");
             sb.AppendLine("------------------------------");
 
             for (int i = 0; i < cantidadPedidos[cliente]; i++)
             {
                 double precio = ObtenerPrecio(pedido[cliente, i]);
-                sb.AppendLine(pedido[cliente, i] + " x " + cantidades[cliente, i] + " - S/ " + cantidades[cliente, i] * precio);
+                sb.AppendLine(pedido[cliente, i] + " x " +cantidades[cliente, i] + " -S / " +cantidades[cliente, i] * precio);
                 totalPedidos += cantidades[cliente, i] * precio;
             }
 
             double costoDelivery = 0;
-
             if (delivery[cliente])
             {
                 costoDelivery = ObtenerCostoDelivery(distrito[cliente]);
-                sb.AppendLine("Distrito: " + distrito[cliente]);
-                sb.AppendLine("Costo de delivery: S/ " + costoDelivery);
+                sb.AppendLine("Distrito: " +distrito[cliente]);
+                sb.AppendLine("Costo de delivery: S/ " +costoDelivery);
             }
 
             double total = totalPedidos + costoDelivery;
 
+            if (esFactura)
+            {
+                sb.AppendLine("RUC: " +rucCliente[cliente]);
+            }
             sb.AppendLine("--------------------------------");
-            sb.AppendLine("Subtotal: S/ " + totalPedidos);
-            sb.AppendLine("Total a pagar: S/ " + total);
+            sb.AppendLine("Subtotal: S/ " +totalPedidos);
+            sb.AppendLine("Total a pagar: S/ " +total);
 
             string texto = sb.ToString();
-            Console.Write(texto);
+            if (mostrar)
+            {
+                Console.Write(texto);
+            }
 
             boleta[cliente] = texto;
             totalCliente[cliente] = total;
-
             return total;
         }
+        
         static void EliminarCliente(int indice)
         {
             for (int i = indice; i < contador - 1; i++)
@@ -573,6 +577,8 @@ namespace Sistema_de_pedidos
                 boleta[i] = boleta[i + 1];
                 totalCliente[i] = totalCliente[i + 1];
                 cantidadPedidos[i] = cantidadPedidos[i + 1];
+                tipoDoc[i] = tipoDoc[i + 1];
+                rucCliente[i] = rucCliente[i + 1];
                 for (int k = 0; k < maxItems; k++)
                 {
                     pedido[i, k] = pedido[i + 1, k];
@@ -591,6 +597,8 @@ namespace Sistema_de_pedidos
             boleta[ultimo] = null;
             totalCliente[ultimo] = 0;
             cantidadPedidos[ultimo] = 0;
+            tipoDoc[ultimo] = null;
+            rucCliente[ultimo] = null;
             for (int k = 0; k < maxItems; k++)
             {
                 pedido[ultimo, k] = null;
@@ -645,14 +653,11 @@ namespace Sistema_de_pedidos
                 EliminarCliente(cliente);
                 Console.WriteLine("Pedido eliminado de la lista y guardado en el historial.");
             }
-            else
-            {
-                Console.WriteLine("El pedido de " + Nombre[cliente] + " ya ha sido entregado.");
-            }
+            
         }
         static void GuardarEnHistorial(int cliente)
         {
-            string encabezado = "Cliente: " + Nombre[cliente] + " - " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " - Pago: " + metodoPago[cliente];
+            string encabezado = "Cliente: " +Nombre[cliente] + " - " +DateTime.Now.ToString("dd / MM / yyyy HH: mm") + " -Pago: " +metodoPago[cliente] + " -Documento: " +(tipoDoc[cliente] == "f" ? "Factura" : "Boleta");
             File.AppendAllText(rutaHistorial, encabezado + Environment.NewLine + boleta[cliente] + Environment.NewLine);
             totalVendido += totalCliente[cliente];
 
@@ -690,6 +695,7 @@ namespace Sistema_de_pedidos
                 if (!int.TryParse(Console.ReadLine(), out Op))
                 {
                     Console.WriteLine("!!!!ERROR: Ingrese una opción numerica...!!!!");
+                    Console.ReadKey();
                     continue;
                 }
                 switch (Op)
